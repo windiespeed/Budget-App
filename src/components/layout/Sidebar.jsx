@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import {
   LayoutDashboard, CreditCard, ArrowLeftRight,
-  PieChart, Repeat, DollarSign, LogOut, X
+  PieChart, Repeat, DollarSign, LogOut, X, Settings
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 
@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { to: '/transactions',  icon: ArrowLeftRight,   label: 'Transactions' },
   { to: '/budget',        icon: PieChart,         label: 'Budget' },
   { to: '/subscriptions', icon: Repeat,           label: 'Subscriptions' },
+  { to: '/settings',      icon: Settings,         label: 'Settings' },
 ]
 
 export default function Sidebar({ onClose }) {

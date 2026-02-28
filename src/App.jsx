@@ -8,6 +8,7 @@ import Accounts from './pages/Accounts'
 import Transactions from './pages/Transactions'
 import Budget from './pages/Budget'
 import Subscriptions from './pages/Subscriptions'
+import Settings from './pages/Settings'
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
@@ -34,7 +35,8 @@ function AppRoutes() {
                 <Route path="/transactions"  element={<Transactions />} />
                 <Route path="/budget"        element={<Budget />} />
                 <Route path="/subscriptions" element={<Subscriptions />} />
-                <Route path="*"              element={<Navigate to="/" replace />} />
+                <Route path="/settings"     element={<Settings />} />
+                <Route path="*"             element={<Navigate to="/" replace />} />
               </Routes>
             </Layout>
           </ProtectedRoute>

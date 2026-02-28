@@ -7,6 +7,7 @@ const PAGE_TITLES = {
   '/transactions':  { title: 'Transactions',  subtitle: 'View and manage your transactions' },
   '/budget':        { title: 'Budget',        subtitle: 'Track spending against your budget' },
   '/subscriptions': { title: 'Subscriptions', subtitle: 'Manage recurring bills & subscriptions' },
+  '/settings':      { title: 'Settings',      subtitle: 'Manage your account and preferences' },
 }
 
 export default function Header({ onMenuOpen }) {
