@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install)",
+      "Bash(npm install @supabase/supabase-js recharts lucide-react react-hook-form date-fns react-router-dom react-plaid-link)",
+      "Bash(npm install -D tailwindcss@3 postcss autoprefixer)",
+      "Bash(npx tailwindcss init -p)",
+      "Bash(npm run build)"
+    ]
+  }
+}
