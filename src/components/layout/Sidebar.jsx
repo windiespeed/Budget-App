@@ -33,7 +33,7 @@ export default function Sidebar({ onClose, collapsed, onToggle }) {
       )}
 
       {/* Navigation */}
-      <nav className={`flex-1 ${collapsed ? 'px-2' : 'px-3'} py-4 space-y-0.5 overflow-y-auto`}>
+      <nav className={`flex-1 ${collapsed ? 'px-2' : 'px-3'} py-4 space-y-0.5 overflow-y-auto overflow-x-hidden`}>
         {NAV_ITEMS.map(({ to, icon: Icon, label }) => (
           <NavLink
             key={to}

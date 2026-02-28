@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Sidebar from './Sidebar'
 import Header from './Header'
 import Footer from './Footer'
@@ -16,6 +16,17 @@ export default function Layout({ children }) {
 
   const isExpanded = !collapsed || hovered
   const pinOpen = () => { setCollapsed(false); setHovered(false) }
+
+  // Delay label rendering until after the width transition finishes
+  const [showLabels, setShowLabels] = useState(false)
+  useEffect(() => {
+    if (isExpanded) {
+      const t = setTimeout(() => setShowLabels(true), 180)
+      return () => clearTimeout(t)
+    } else {
+      setShowLabels(false)
+    }
+  }, [isExpanded])
 
   const startResize = (e) => {
     e.preventDefault()
@@ -46,22 +57,24 @@ export default function Layout({ children }) {
 
         {/* Sidebar — desktop only */}
         <div
-          className="hidden md:flex flex-shrink-0 transition-all duration-200"
+          className="hidden md:flex flex-shrink-0 transition-[width] duration-200 overflow-hidden"
           style={{ width: isExpanded ? sidebarWidth : COLLAPSED_WIDTH }}
           onMouseEnter={() => setHovered(true)}
           onMouseLeave={() => setHovered(false)}
           onClick={collapsed ? pinOpen : undefined}
         >
-          <Sidebar collapsed={!isExpanded} onToggle={() => { setCollapsed(true); setHovered(false) }} />
+          <Sidebar collapsed={!showLabels} onToggle={() => { setCollapsed(true); setHovered(false) }} />
         </div>
 
-        {/* Resize handle — desktop only, hidden when collapsed */}
-        {isExpanded && (
-          <div
-            className="hidden md:block w-1 flex-shrink-0 cursor-col-resize bg-slate-800 hover:bg-indigo-500 active:bg-indigo-400 transition-colors"
-            onMouseDown={startResize}
-          />
-        )}
+        {/* Resize handle — desktop only, invisible when collapsed */}
+        <div
+          className={`hidden md:block w-1 flex-shrink-0 transition-colors ${
+            isExpanded
+              ? 'cursor-col-resize bg-slate-800 hover:bg-indigo-500 active:bg-indigo-400'
+              : 'bg-transparent pointer-events-none'
+          }`}
+          onMouseDown={isExpanded ? startResize : undefined}
+        />
 
         {/* Mobile drawer overlay */}
         {menuOpen && (
@@ -74,7 +87,7 @@ export default function Layout({ children }) {
         )}
 
         {/* Main content */}
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 min-w-0">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-6 min-w-0">
           {children}
         </main>
 
