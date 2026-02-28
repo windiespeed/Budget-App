@@ -1,4 +1,5 @@
 import { CreditCard, Landmark, TrendingUp, Wallet, Trash2 } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { formatCurrency } from '../../utils/formatters'
 import Badge from '../ui/Badge'
 
@@ -16,8 +17,10 @@ export default function AccountCard({ account, onDelete }) {
   const isCredit = account.account_type === 'credit'
   const balance = account.balance
 
+  const txnUrl = `/transactions?accountId=${account.id}&accountName=${encodeURIComponent(account.name)}`
+
   return (
-    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 hover:shadow-md transition-shadow group">
+    <Link to={txnUrl} className="block bg-white rounded-xl border border-gray-200 shadow-sm p-5 hover:shadow-md transition-shadow group">
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center">
@@ -32,7 +35,7 @@ export default function AccountCard({ account, onDelete }) {
           <Badge color={config.color}>{config.label}</Badge>
           {onDelete && (
             <button
-              onClick={() => onDelete(account.id)}
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete(account.id) }}
               className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-50 text-gray-400 hover:text-red-500 transition-all"
             >
               <Trash2 className="w-4 h-4" />
@@ -53,6 +56,6 @@ export default function AccountCard({ account, onDelete }) {
           Connected via Plaid
         </p>
       )}
-    </div>
+    </Link>
   )
 }

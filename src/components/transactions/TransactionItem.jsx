@@ -2,7 +2,7 @@ import { Trash2 } from 'lucide-react'
 import { formatCurrency, formatDateShort } from '../../utils/formatters'
 import { getCategoryById } from '../../utils/categories'
 
-export default function TransactionItem({ transaction, onDelete }) {
+export default function TransactionItem({ transaction, onDelete, accountName }) {
   const category = getCategoryById(transaction.category)
   const isExpense = transaction.amount > 0
 
@@ -20,6 +20,7 @@ export default function TransactionItem({ transaction, onDelete }) {
         </p>
         <p className="text-xs text-gray-500 truncate">
           {transaction.merchant_name ? transaction.description : category.label}
+          {accountName && <span className="ml-1.5 text-gray-400">· {accountName}</span>}
           {transaction.is_pending && (
             <span className="ml-1.5 text-amber-600 font-medium">· Pending</span>
           )}

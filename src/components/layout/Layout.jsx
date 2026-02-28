@@ -1,14 +1,21 @@
 import { useState } from 'react'
 import Sidebar from './Sidebar'
 import Header from './Header'
+import Footer from './Footer'
 
 const MIN_WIDTH = 160
 const MAX_WIDTH = 360
 const DEFAULT_WIDTH = 240
+const COLLAPSED_WIDTH = 64
 
 export default function Layout({ children }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [sidebarWidth, setSidebarWidth] = useState(DEFAULT_WIDTH)
+  const [collapsed, setCollapsed] = useState(true)
+  const [hovered, setHovered] = useState(false)
+
+  const isExpanded = !collapsed || hovered
+  const pinOpen = () => { setCollapsed(false); setHovered(false) }
 
   const startResize = (e) => {
     e.preventDefault()
@@ -29,35 +36,53 @@ export default function Layout({ children }) {
   }
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
-      {/* Sidebar — desktop only */}
-      <div className="hidden md:flex flex-shrink-0" style={{ width: sidebarWidth }}>
-        <Sidebar />
-      </div>
+    <div className="flex flex-col h-screen bg-gray-50 overflow-hidden">
 
-      {/* Resize handle — desktop only */}
-      <div
-        className="hidden md:block w-1 flex-shrink-0 cursor-col-resize bg-slate-800 hover:bg-indigo-500 active:bg-indigo-400 transition-colors"
-        onMouseDown={startResize}
-      />
+      {/* Full-width header */}
+      <Header onMenuOpen={() => setMenuOpen(true)} />
 
-      {/* Mobile drawer overlay */}
-      {menuOpen && (
-        <div className="md:hidden fixed inset-0 z-50 flex">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setMenuOpen(false)} />
-          <div className="relative w-64 flex-shrink-0">
-            <Sidebar onClose={() => setMenuOpen(false)} />
-          </div>
+      {/* Middle row: sidebar + main content */}
+      <div className="flex flex-1 min-h-0 overflow-hidden">
+
+        {/* Sidebar — desktop only */}
+        <div
+          className="hidden md:flex flex-shrink-0 transition-all duration-200"
+          style={{ width: isExpanded ? sidebarWidth : COLLAPSED_WIDTH }}
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => setHovered(false)}
+          onClick={collapsed ? pinOpen : undefined}
+        >
+          <Sidebar collapsed={!isExpanded} onToggle={() => { setCollapsed(true); setHovered(false) }} />
         </div>
-      )}
 
-      {/* Main content */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <Header onMenuOpen={() => setMenuOpen(true)} />
-        <main className="flex-1 overflow-y-auto p-4 md:p-6">
+        {/* Resize handle — desktop only, hidden when collapsed */}
+        {isExpanded && (
+          <div
+            className="hidden md:block w-1 flex-shrink-0 cursor-col-resize bg-slate-800 hover:bg-indigo-500 active:bg-indigo-400 transition-colors"
+            onMouseDown={startResize}
+          />
+        )}
+
+        {/* Mobile drawer overlay */}
+        {menuOpen && (
+          <div className="md:hidden fixed inset-0 z-50 flex">
+            <div className="absolute inset-0 bg-black/50" onClick={() => setMenuOpen(false)} />
+            <div className="relative w-64 flex-shrink-0">
+              <Sidebar onClose={() => setMenuOpen(false)} />
+            </div>
+          </div>
+        )}
+
+        {/* Main content */}
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 min-w-0">
           {children}
         </main>
+
       </div>
+
+      {/* Full-width footer */}
+      <Footer />
+
     </div>
   )
 }

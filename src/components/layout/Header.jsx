@@ -1,13 +1,14 @@
-import { useLocation } from 'react-router-dom'
-import { Bell, Menu } from 'lucide-react'
+import { Link, useLocation } from 'react-router-dom'
+import { Bell, Menu, DollarSign } from 'lucide-react'
 
 const PAGE_TITLES = {
-  '/':              { title: 'Dashboard',     subtitle: 'Your financial overview' },
+  '/':              { title: 'Home',          subtitle: 'Welcome back' },
   '/accounts':      { title: 'Accounts',      subtitle: 'Manage your linked bank accounts' },
   '/transactions':  { title: 'Transactions',  subtitle: 'View and manage your transactions' },
   '/budget':        { title: 'Budget',        subtitle: 'Track spending against your budget' },
   '/subscriptions': { title: 'Subscriptions', subtitle: 'Manage recurring bills & subscriptions' },
   '/settings':      { title: 'Settings',      subtitle: 'Manage your account and preferences' },
+  '/reconcile':     { title: 'Reconcile',     subtitle: 'Match transactions to your bank statement' },
 }
 
 export default function Header({ onMenuOpen }) {
@@ -23,9 +24,15 @@ export default function Header({ onMenuOpen }) {
         >
           <Menu className="w-5 h-5" />
         </button>
-        <div>
-          <h1 className="text-lg md:text-xl font-bold text-gray-900">{title}</h1>
-          <p className="hidden sm:block text-sm text-gray-500 mt-0.5">{subtitle}</p>
+        <Link to="/" className="flex items-center gap-2 flex-shrink-0">
+          <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center">
+            <DollarSign className="w-4 h-4 text-white" />
+          </div>
+          <span className="font-bold text-gray-900 text-base">BudgetWise</span>
+        </Link>
+        <div className="w-px h-5 bg-gray-200 hidden sm:block" />
+        <div className="hidden sm:block">
+          <h1 className="text-base font-semibold text-gray-700">{title}</h1>
         </div>
       </div>
       <div className="flex items-center gap-3">

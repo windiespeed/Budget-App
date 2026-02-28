@@ -1,6 +1,8 @@
 import { useState, useMemo } from 'react'
-import { PlusCircle, ArrowLeftRight } from 'lucide-react'
+import { useSearchParams } from 'react-router-dom'
+import { PlusCircle, ArrowLeftRight, X, SlidersHorizontal, ChevronUp } from 'lucide-react'
 import { useTransactions } from '../hooks/useTransactions'
+import { useAccounts } from '../hooks/useAccounts'
 import TransactionItem from '../components/transactions/TransactionItem'
 import TransactionFilters from '../components/transactions/TransactionFilters'
 import AddTransactionModal from '../components/transactions/AddTransactionModal'
@@ -8,9 +10,21 @@ import LoadingSpinner from '../components/ui/LoadingSpinner'
 import { formatCurrency, formatDate } from '../utils/formatters'
 
 export default function Transactions() {
-  const [filters, setFilters] = useState({})
+  const [searchParams, setSearchParams] = useSearchParams()
+  const initAccountId = searchParams.get('accountId')
+  const initAccountName = searchParams.get('accountName')
+
+  const [filters, setFilters] = useState(() => initAccountId ? { accountId: initAccountId } : {})
   const [showAdd, setShowAdd] = useState(false)
+  const [filtersOpen, setFiltersOpen] = useState(true)
+
+  const { accounts } = useAccounts()
+  const selectedAccount = accounts.find(a => a.id === filters.accountId)
+  const hasActiveFilters = !!(filters.search || filters.category || filters.startDate || filters.endDate || filters.accountId)
+
   const { transactions, loading, totalSpending, totalIncome, addTransaction, deleteTransaction } = useTransactions(filters)
+
+  const accountMap = useMemo(() => Object.fromEntries(accounts.map(a => [a.id, a.name])), [accounts])
 
   const grouped = useMemo(() => {
     const map = {}
@@ -29,30 +43,58 @@ export default function Transactions() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-5">
-      {/* Stats row */}
-      <div className="grid grid-cols-2 gap-3 md:gap-4">
-        <div className="bg-white rounded-xl border border-gray-200 p-3 md:p-4 shadow-sm">
-          <p className="text-xs text-gray-500 mb-1">Total Spending</p>
-          <p className="text-lg md:text-2xl font-bold text-red-600">{formatCurrency(totalSpending)}</p>
+      {/* Consolidated toolbar */}
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 space-y-3">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 min-w-0">
+            <div>
+              <p className="text-[11px] text-gray-400 uppercase tracking-wide leading-none mb-0.5">Spent</p>
+              <p className="text-base font-bold text-red-600 leading-none">{formatCurrency(totalSpending)}</p>
+            </div>
+            <div className="w-px h-7 bg-gray-200 flex-shrink-0" />
+            <div>
+              <p className="text-[11px] text-gray-400 uppercase tracking-wide leading-none mb-0.5">Income</p>
+              <p className="text-base font-bold text-emerald-600 leading-none">{formatCurrency(totalIncome)}</p>
+            </div>
+          </div>
+          <div className="ml-auto flex items-center gap-2 flex-shrink-0">
+            {selectedAccount && (
+              <div className="flex items-center gap-1.5 px-2.5 py-1 bg-indigo-50 border border-indigo-200 rounded-lg text-xs text-indigo-700 font-medium min-w-0 max-w-36">
+                <span className="truncate">{selectedAccount.name}</span>
+                <button
+                  onClick={() => setFilters(f => { const { accountId, ...rest } = f; return rest })}
+                  className="text-indigo-400 hover:text-indigo-700 flex-shrink-0 transition-colors"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            )}
+            <button
+              onClick={() => setFiltersOpen(o => !o)}
+              className="relative flex items-center gap-1.5 px-3 py-1.5 border border-gray-300 hover:bg-gray-50 text-gray-600 rounded-lg text-sm transition-colors"
+            >
+              {filtersOpen ? <ChevronUp className="w-4 h-4" /> : <SlidersHorizontal className="w-4 h-4" />}
+              <span className="hidden sm:inline">Filters</span>
+              {hasActiveFilters && !filtersOpen && (
+                <span className="absolute -top-1 -right-1 w-2 h-2 bg-indigo-500 rounded-full" />
+              )}
+            </button>
+            <button
+              onClick={() => setShowAdd(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg text-sm transition-colors"
+            >
+              <PlusCircle className="w-4 h-4" />
+              <span className="hidden sm:inline">Add Transaction</span>
+              <span className="sm:hidden">Add</span>
+            </button>
+          </div>
         </div>
-        <div className="bg-white rounded-xl border border-gray-200 p-3 md:p-4 shadow-sm">
-          <p className="text-xs text-gray-500 mb-1">Total Income</p>
-          <p className="text-lg md:text-2xl font-bold text-emerald-600">{formatCurrency(totalIncome)}</p>
-        </div>
-      </div>
-
-      {/* Filters */}
-      <TransactionFilters filters={filters} onChange={setFilters} />
-
-      {/* Add button */}
-      <div className="flex justify-end">
-        <button
-          onClick={() => setShowAdd(true)}
-          className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl text-sm transition-colors shadow-sm"
-        >
-          <PlusCircle className="w-4 h-4" />
-          Add Transaction
-        </button>
+        {filtersOpen && (
+          <>
+            <div className="border-t border-gray-100" />
+            <TransactionFilters filters={filters} onChange={setFilters} accounts={accounts} />
+          </>
+        )}
       </div>
 
       {/* Transaction list */}
@@ -82,7 +124,7 @@ export default function Transactions() {
               </div>
               <div className="divide-y divide-gray-50">
                 {txns.map(t => (
-                  <TransactionItem key={t.id} transaction={t} onDelete={handleDelete} />
+                  <TransactionItem key={t.id} transaction={t} onDelete={handleDelete} accountName={accountMap[t.account_id]} />
                 ))}
               </div>
             </div>

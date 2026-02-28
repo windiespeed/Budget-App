@@ -1,18 +1,13 @@
-import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { Wallet, TrendingDown, TrendingUp, Repeat, Link2 } from 'lucide-react'
+import { CreditCard, ArrowLeftRight, PieChart, Repeat, Wallet, Link2, TrendingUp, TrendingDown } from 'lucide-react'
 import { useAccounts } from '../hooks/useAccounts'
 import { useTransactions } from '../hooks/useTransactions'
 import { useSubscriptions } from '../hooks/useSubscriptions'
 import { useBudgets } from '../hooks/useBudgets'
-import StatCard from '../components/dashboard/StatCard'
-import SpendingChart from '../components/dashboard/SpendingChart'
 import RecentTransactions from '../components/dashboard/RecentTransactions'
-import AccountsSummary from '../components/dashboard/AccountsSummary'
 import { formatCurrency } from '../utils/formatters'
 import { useAuth } from '../context/AuthContext'
 
-// Get current month's date range
 function currentMonthRange() {
   const now = new Date()
   const start = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0]
@@ -20,43 +15,54 @@ function currentMonthRange() {
   return { startDate: start, endDate: end }
 }
 
-// Last 30 days range for chart
-function last30Days() {
-  const end = new Date()
-  const start = new Date()
-  start.setDate(start.getDate() - 30)
-  return { startDate: start.toISOString().split('T')[0], endDate: end.toISOString().split('T')[0] }
+function QuickCard({ to, icon: Icon, label, primary, secondary, iconBg, iconColor }) {
+  return (
+    <Link
+      to={to}
+      className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 hover:shadow-md hover:border-gray-300 transition-all flex flex-col gap-3"
+    >
+      <div className="flex items-center gap-2.5">
+        <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${iconBg}`}>
+          <Icon size={16} className={iconColor} />
+        </div>
+        <span className="text-sm font-medium text-gray-500">{label}</span>
+      </div>
+      <div>
+        <p className="text-xl font-bold text-gray-900 leading-tight">{primary}</p>
+        {secondary && <p className="text-xs text-gray-400 mt-0.5">{secondary}</p>}
+      </div>
+    </Link>
+  )
 }
 
 export default function Dashboard() {
   const { user } = useAuth()
   const { accounts, totalBalance, loading: acctLoading } = useAccounts()
   const { transactions: monthTxns, totalSpending, totalIncome, loading: txnLoading } = useTransactions(currentMonthRange())
-  const { transactions: chartTxns } = useTransactions(last30Days())
   const { totalMonthly: subMonthly, upcoming } = useSubscriptions()
   const { totalBudgeted, totalSpent } = useBudgets()
 
+  const hour = new Date().getHours()
+  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
   const userName = user?.user_metadata?.full_name?.split(' ')[0] || 'there'
-  const budgetRemaining = totalBudgeted - totalSpent
   const noAccounts = !acctLoading && accounts.length === 0
-  const noTransactions = !txnLoading && monthTxns.length === 0
+  const budgetRemaining = totalBudgeted - totalSpent
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
-      {/* Welcome */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl md:text-2xl font-bold text-gray-900">Good morning, {userName} 👋</h2>
-          <p className="text-gray-500 text-sm mt-0.5">
-            {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-          </p>
-        </div>
+    <div className="max-w-3xl mx-auto space-y-6">
+
+      {/* Greeting */}
+      <div>
+        <h2 className="text-2xl font-bold text-gray-900">{greeting}, {userName}</h2>
+        <p className="text-gray-400 text-sm mt-0.5">
+          {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+        </p>
       </div>
 
-      {/* Empty state CTA */}
+      {/* Connect bank CTA — shown when no accounts */}
       {noAccounts && (
-        <div className="bg-gradient-to-r from-indigo-600 to-indigo-500 rounded-2xl p-6 text-white">
-          <div className="flex items-start justify-between">
+        <div className="bg-gradient-to-br from-indigo-600 to-indigo-700 rounded-2xl p-6 text-white">
+          <div className="flex items-start justify-between gap-4">
             <div>
               <h3 className="text-lg font-bold mb-1">Connect your bank to get started</h3>
               <p className="text-indigo-200 text-sm mb-4">
@@ -70,90 +76,92 @@ export default function Dashboard() {
                 Connect Bank
               </Link>
             </div>
-            <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center">
-              <Wallet className="w-7 h-7 text-white" />
+            <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center flex-shrink-0">
+              <Wallet className="w-6 h-6 text-white" />
             </div>
           </div>
         </div>
       )}
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          title="Net Worth"
-          amount={totalBalance}
-          subtitle={`${accounts.length} account${accounts.length !== 1 ? 's' : ''}`}
-          icon={Wallet}
-          color={totalBalance >= 0 ? 'indigo' : 'red'}
-        />
-        <StatCard
-          title="This Month Spent"
-          amount={totalSpending}
-          subtitle="expenses this month"
-          icon={TrendingDown}
-          color="red"
-        />
-        <StatCard
-          title="This Month Income"
-          amount={totalIncome}
-          subtitle="income this month"
-          icon={TrendingUp}
-          color="green"
-        />
-        <StatCard
-          title="Subscriptions"
-          amount={subMonthly}
-          subtitle={`${upcoming.length} due this week`}
-          icon={Repeat}
-          color="amber"
-        />
-      </div>
-
-      {/* Spending Chart */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="font-semibold text-gray-900 text-sm">Spending & Income — Last 30 Days</h2>
-          <div className="flex items-center gap-4 text-xs text-gray-500">
-            <span className="flex items-center gap-1.5"><span className="w-3 h-0.5 bg-red-500 inline-block rounded" /> Spending</span>
-            <span className="flex items-center gap-1.5"><span className="w-3 h-0.5 bg-emerald-500 inline-block rounded" /> Income</span>
-          </div>
-        </div>
-        <SpendingChart transactions={chartTxns} />
-      </div>
-
-      {/* Budget summary + Accounts */}
-      {totalBudgeted > 0 && (
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="font-semibold text-gray-900 text-sm">Monthly Budget</h2>
-            <Link to="/budget" className="text-xs text-indigo-600 hover:text-indigo-700 font-medium">Manage →</Link>
-          </div>
-          <div className="flex items-center justify-between text-sm mb-2">
-            <span className="text-gray-500">
-              {formatCurrency(totalSpent)} spent of {formatCurrency(totalBudgeted)}
-            </span>
-            <span className={`font-semibold ${budgetRemaining < 0 ? 'text-red-600' : 'text-emerald-600'}`}>
-              {budgetRemaining < 0 ? '-' : ''}{formatCurrency(Math.abs(budgetRemaining))} {budgetRemaining < 0 ? 'over' : 'remaining'}
-            </span>
-          </div>
-          <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
-            <div
-              className={`h-full rounded-full transition-all ${totalBudgeted > 0 && totalSpent / totalBudgeted >= 1 ? 'bg-red-500' : totalSpent / totalBudgeted >= 0.8 ? 'bg-amber-500' : 'bg-emerald-500'}`}
-              style={{ width: `${Math.min(100, totalBudgeted > 0 ? (totalSpent / totalBudgeted) * 100 : 0)}%` }}
-            />
+      {/* Net worth hero */}
+      {!noAccounts && (
+        <div className="bg-slate-900 rounded-2xl p-6 text-white">
+          <p className="text-slate-400 text-xs uppercase tracking-wide mb-1">Total Net Worth</p>
+          <p className={`text-4xl font-bold mb-5 ${totalBalance < 0 ? 'text-red-400' : 'text-white'}`}>
+            {formatCurrency(totalBalance)}
+          </p>
+          <div className="grid grid-cols-3 gap-4 pt-4 border-t border-slate-800">
+            <div>
+              <p className="text-slate-400 text-xs mb-1 flex items-center gap-1">
+                <TrendingUp className="w-3 h-3" /> Income
+              </p>
+              <p className="text-emerald-400 font-semibold text-sm">{formatCurrency(totalIncome)}</p>
+            </div>
+            <div>
+              <p className="text-slate-400 text-xs mb-1 flex items-center gap-1">
+                <TrendingDown className="w-3 h-3" /> Spent
+              </p>
+              <p className="text-red-400 font-semibold text-sm">{formatCurrency(totalSpending)}</p>
+            </div>
+            <div>
+              <p className="text-slate-400 text-xs mb-1">Subscriptions</p>
+              <p className="text-white font-semibold text-sm">{formatCurrency(subMonthly)}/mo</p>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Two-column: Recent Transactions + Accounts */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
-        <div className="lg:col-span-3">
-          <RecentTransactions transactions={monthTxns} loading={txnLoading} />
-        </div>
-        <div className="lg:col-span-2">
-          <AccountsSummary accounts={accounts} />
-        </div>
+      {/* Quick nav cards */}
+      <div className="grid grid-cols-2 gap-3">
+        <QuickCard
+          to="/accounts"
+          icon={CreditCard}
+          label="Accounts"
+          primary={`${accounts.length} account${accounts.length !== 1 ? 's' : ''}`}
+          secondary={`${formatCurrency(Math.abs(totalBalance))} total balance`}
+          iconBg="bg-indigo-50"
+          iconColor="text-indigo-600"
+        />
+        <QuickCard
+          to="/transactions"
+          icon={ArrowLeftRight}
+          label="Transactions"
+          primary={`${monthTxns.length} this month`}
+          secondary={`${formatCurrency(totalSpending)} spent`}
+          iconBg="bg-blue-50"
+          iconColor="text-blue-600"
+        />
+        <QuickCard
+          to="/budget"
+          icon={PieChart}
+          label="Budget"
+          primary={
+            totalBudgeted > 0
+              ? formatCurrency(Math.abs(budgetRemaining))
+              : 'Not set'
+          }
+          secondary={
+            totalBudgeted > 0
+              ? `${budgetRemaining >= 0 ? 'remaining of' : 'over'} ${formatCurrency(totalBudgeted)}`
+              : 'Set a monthly budget'
+          }
+          iconBg="bg-emerald-50"
+          iconColor="text-emerald-600"
+        />
+        <QuickCard
+          to="/subscriptions"
+          icon={Repeat}
+          label="Subscriptions"
+          primary={`${formatCurrency(subMonthly)}/mo`}
+          secondary={upcoming.length > 0 ? `${upcoming.length} due this week` : 'No upcoming bills'}
+          iconBg="bg-amber-50"
+          iconColor="text-amber-600"
+        />
       </div>
+
+      {/* Recent transactions */}
+      <RecentTransactions transactions={monthTxns} loading={txnLoading} />
+
     </div>
   )
 }
