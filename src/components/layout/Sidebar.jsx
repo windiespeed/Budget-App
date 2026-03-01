@@ -10,7 +10,7 @@ const NAV_ITEMS = [
   { to: '/accounts',      icon: CreditCard,       label: 'Accounts' },
   { to: '/transactions',  icon: ArrowLeftRight,   label: 'Transactions' },
   { to: '/budget',        icon: PieChart,         label: 'Budget' },
-  { to: '/subscriptions', icon: Repeat,           label: 'Subscriptions' },
+  { to: '/subscriptions', icon: Repeat,           label: 'Expenses' },
   { to: '/reconcile',     icon: Scale,            label: 'Reconcile' },
 ]
 

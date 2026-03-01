@@ -59,15 +59,15 @@ export function useSubscriptions() {
   }
 
   const active = subscriptions.filter(s => s.status === 'active')
+  const activeExpenses = active.filter(s => s.entry_type !== 'income')
+  const activeIncome = active.filter(s => s.entry_type === 'income')
 
-  const totalMonthly = active.reduce((sum, s) => {
-    return sum + annualToMonthly(s.amount, s.billing_cycle)
-  }, 0)
-
+  const totalMonthly = activeExpenses.reduce((sum, s) => sum + annualToMonthly(s.amount, s.billing_cycle), 0)
+  const totalMonthlyIncome = activeIncome.reduce((sum, s) => sum + annualToMonthly(s.amount, s.billing_cycle), 0)
   const totalAnnual = totalMonthly * 12
 
-  // Subscriptions due in the next 7 days
-  const upcoming = active
+  // Bills/subscriptions due in the next 7 days
+  const upcoming = activeExpenses
     .filter(s => {
       if (!s.next_billing_date) return false
       const days = (new Date(s.next_billing_date) - new Date()) / (1000 * 60 * 60 * 24)
@@ -78,6 +78,24 @@ export function useSubscriptions() {
   return {
     subscriptions, loading, error,
     fetchSubscriptions, addSubscription, updateSubscription, deleteSubscription,
-    totalMonthly, totalAnnual, upcoming, activeCount: active.length
+    totalMonthly, totalMonthlyIncome, totalAnnual, upcoming, activeCount: active.length
   }
+}
+
+// Returns a map of accountId → { billsDue, incomeExpected } for active entries due within 30 days
+export function computeAccountBalances(subscriptions, accounts) {
+  const in30 = new Date()
+  in30.setDate(in30.getDate() + 30)
+  const map = {}
+  for (const a of accounts) map[a.id] = { billsDue: 0, incomeExpected: 0 }
+
+  for (const s of subscriptions) {
+    if (s.status !== 'active' || !s.account_id || !map[s.account_id]) continue
+    const due = s.next_billing_date ? new Date(s.next_billing_date) : null
+    if (due && due > in30) continue
+    const monthly = annualToMonthly(s.amount, s.billing_cycle)
+    if (s.entry_type === 'income') map[s.account_id].incomeExpected += monthly
+    else map[s.account_id].billsDue += monthly
+  }
+  return map
 }

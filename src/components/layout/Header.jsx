@@ -6,14 +6,14 @@ const PAGE_TITLES = {
   '/accounts':      { title: 'Accounts',      subtitle: 'Manage your linked bank accounts' },
   '/transactions':  { title: 'Transactions',  subtitle: 'View and manage your transactions' },
   '/budget':        { title: 'Budget',        subtitle: 'Track spending against your budget' },
-  '/subscriptions': { title: 'Subscriptions', subtitle: 'Manage recurring bills & subscriptions' },
+  '/subscriptions': { title: 'Expenses', subtitle: 'Track recurring bills, subscriptions & income' },
   '/settings':      { title: 'Settings',      subtitle: 'Manage your account and preferences' },
-  '/reconcile':     { title: 'Reconcile',     subtitle: 'Match transactions to your bank statement' },
+  '/reconcile':     { title: 'Reconcile',     subtitle: 'Match transactions to your bank account' },
 }
 
 export default function Header({ onMenuOpen }) {
   const { pathname } = useLocation()
-  const { title, subtitle } = PAGE_TITLES[pathname] || PAGE_TITLES['/']
+  const { title } = PAGE_TITLES[pathname] || PAGE_TITLES['/']
 
   return (
     <header className="bg-white border-b border-gray-200 px-4 md:px-6 py-3 md:py-4 flex items-center justify-between">

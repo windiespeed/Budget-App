@@ -66,6 +66,9 @@ create table if not exists subscriptions (
   website_url text,
   color text,
   notes text,
+  account_id uuid references accounts(id) on delete set null,
+  is_autopay boolean default false,
+  entry_type text default 'expense',  -- 'expense' | 'income'
   created_at timestamptz default now()
 );
 
@@ -109,6 +112,25 @@ drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
+
+-- =====================================================
+-- Reconciliations (one row per completed reconciliation session)
+-- =====================================================
+create table if not exists reconciliations (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references auth.users on delete cascade not null,
+  account_id uuid references accounts on delete cascade not null,
+  statement_date date not null,
+  statement_balance decimal(12,2) not null,
+  cleared_balance decimal(12,2) not null,
+  created_at timestamptz default now()
+);
+alter table reconciliations enable row level security;
+create policy "Users manage own reconciliations"
+  on reconciliations for all using (auth.uid() = user_id);
+
+-- Add is_cleared to transactions (tracks reconciled transactions)
+alter table transactions add column if not exists is_cleared boolean default false;
 
 -- =====================================================
 -- Plaid Items (stores access tokens — server-side only)

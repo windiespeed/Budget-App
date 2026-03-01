@@ -11,11 +11,15 @@ const TYPE_CONFIG = {
   loan:       { icon: Landmark,  label: 'Loan',        color: 'yellow' },
 }
 
-export default function AccountCard({ account, onDelete }) {
+export default function AccountCard({ account, onDelete, billsDue = 0, incomeExpected = 0 }) {
   const config = TYPE_CONFIG[account.account_type] || TYPE_CONFIG.checking
   const Icon = config.icon
   const isCredit = account.account_type === 'credit'
   const balance = account.balance
+
+  const showAvailable = !isCredit && (billsDue > 0 || incomeExpected > 0)
+  const available = balance - billsDue
+  const availableWithIncome = available + incomeExpected
 
   const txnUrl = `/transactions?accountId=${account.id}&accountName=${encodeURIComponent(account.name)}`
 
@@ -50,6 +54,23 @@ export default function AccountCard({ account, onDelete }) {
           {isCredit ? '-' : ''}{formatCurrency(Math.abs(balance))}
         </p>
       </div>
+
+      {showAvailable && (
+        <div className="border-t border-gray-100 mt-3 pt-3 space-y-1.5">
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-gray-500">Available (after bills)</p>
+            <p className={`text-sm font-semibold ${available < 0 ? 'text-red-600' : available < balance * 0.2 ? 'text-amber-600' : 'text-gray-900'}`}>
+              {formatCurrency(available)}
+            </p>
+          </div>
+          {incomeExpected > 0 && (
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-gray-500">With expected income</p>
+              <p className="text-sm font-semibold text-emerald-600">{formatCurrency(availableWithIncome)}</p>
+            </div>
+          )}
+        </div>
+      )}
 
       {!account.is_manual && (
         <p className="mt-3 text-xs text-indigo-600 bg-indigo-50 rounded-lg px-2 py-1 inline-block">

@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { PlusCircle, Link2 } from 'lucide-react'
 import { useAccounts } from '../hooks/useAccounts'
+import { useSubscriptions, computeAccountBalances } from '../hooks/useSubscriptions'
 import AccountCard from '../components/accounts/AccountCard'
 import AddAccountModal from '../components/accounts/AddAccountModal'
 import PlaidLinkButton from '../components/accounts/PlaidLinkButton'
@@ -9,7 +10,13 @@ import { formatCurrency } from '../utils/formatters'
 
 export default function Accounts() {
   const { accounts, loading, totalBalance, addAccount, deleteAccount, fetchAccounts } = useAccounts()
+  const { subscriptions } = useSubscriptions()
   const [showAdd, setShowAdd] = useState(false)
+
+  const accountBalances = useMemo(
+    () => computeAccountBalances(subscriptions, accounts),
+    [subscriptions, accounts]
+  )
 
   const handleAdd = async (data) => {
     await addAccount(data)
@@ -79,7 +86,7 @@ export default function Accounts() {
               <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Cash Accounts</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {depositAccounts.map(acc => (
-                  <AccountCard key={acc.id} account={acc} onDelete={handleDelete} />
+                  <AccountCard key={acc.id} account={acc} onDelete={handleDelete} billsDue={accountBalances[acc.id]?.billsDue ?? 0} incomeExpected={accountBalances[acc.id]?.incomeExpected ?? 0} />
                 ))}
               </div>
             </section>
@@ -90,7 +97,7 @@ export default function Accounts() {
               <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Credit Cards</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {creditAccounts.map(acc => (
-                  <AccountCard key={acc.id} account={acc} onDelete={handleDelete} />
+                  <AccountCard key={acc.id} account={acc} onDelete={handleDelete} billsDue={accountBalances[acc.id]?.billsDue ?? 0} incomeExpected={accountBalances[acc.id]?.incomeExpected ?? 0} />
                 ))}
               </div>
             </section>
@@ -101,7 +108,7 @@ export default function Accounts() {
               <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Investments & Loans</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {investmentAccounts.map(acc => (
-                  <AccountCard key={acc.id} account={acc} onDelete={handleDelete} />
+                  <AccountCard key={acc.id} account={acc} onDelete={handleDelete} billsDue={accountBalances[acc.id]?.billsDue ?? 0} incomeExpected={accountBalances[acc.id]?.incomeExpected ?? 0} />
                 ))}
               </div>
             </section>
